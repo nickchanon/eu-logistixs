@@ -81,10 +81,11 @@ function CountryChart({ country }: { country: Country }) {
 
       <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
         {/* Chart */}
-        <div className="lg:col-span-2 p-4">
+        <div className="lg:col-span-2 p-4 min-w-0 overflow-hidden">
           <div className="text-xs text-slate-500 mb-2">
             Prime {metric === "yield" ? "Net Initial Yield" : "Headline Rent"} ({unit}) · Q1 2024 – Q2 2026
           </div>
+          <div style={{width:'100%',overflowX:'hidden'}}>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(71,85,105,0.3)" />
@@ -92,7 +93,7 @@ function CountryChart({ country }: { country: Country }) {
                 tickFormatter={q => q.replace(" 20", " '")} />
               <YAxis tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false}
                 domain={["auto", "auto"]}
-                tickFormatter={v => metric === "yield" ? `${v}%` : v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} width={45} />
+                tickFormatter={v => metric === "yield" ? `${v}%` : v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} width={38} />
               <Tooltip content={<CustomTooltip />} />
               {FIRMS.map(f => (
                 <Line key={f} type="monotone" dataKey={f}
@@ -104,6 +105,7 @@ function CountryChart({ country }: { country: Country }) {
               ))}
             </LineChart>
           </ResponsiveContainer>
+          </div>
           {/* Firm colour legend */}
           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
             {FIRMS.map(f => (
