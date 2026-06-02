@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>European Logistics Research Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/recharts@2/umd/Recharts.js"></script>
+<style>
+:root {
+  --bg: #0a0f1a;
+  --card: #0f172a;
+  --border: #1e293b;
+  --amber: #F59E0B;
+  --amber-dim: rgba(245,158,11,0.12);
+  --amber-border: rgba(245,158,11,0.3);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --sidebar-w: 200px;
+  --red: #EF4444;
+  --green: #10B981;
+  --blue: #3B82F6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select { font-family: inherit; }
+
+#root { display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo .logo-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--amber);
+  line-height: 1.2;
+}
+.sidebar-logo .logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.sidebar-nav { padding: 8px 0; flex: 1; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-item.active { color: var(--amber); background: var(--amber-dim); border-left-color: var(--amber); }
+.nav-item svg { flex-shrink: 0; }
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 22px; font-weight: 700; color: var(--text); }
+.page-header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kpi-card.amber { border-color: var(--amber-border); background: var(--amber-dim); }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.kpi-card.amber .kpi-value { color: var(--amber); }
+.kpi-sub { font-size: 11px; color: var(--muted); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.country-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.country-tab {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.country-tab:hover { border-color: var(--amber); color: var(--amber); }
+.country-tab.active { background: var(--amber); color: #000; border-color: var(--amber); font-weight: 600; }
+
+.savills-card {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.savills-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.savills-label { font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 0.06em; }
+.savills-summary { font-size: 13px; color: var(--text); line-height: 1.6; }
+.chip-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.chip {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.chip.yield { background: rgba(245,158,11,0.15); color: var(--amber); border-color: var(--amber-border); }
+.chip.rent { background: rgba(16,185,129,0.12); color: var(--green); border-color: rgba(16,185,129,0.3); }
+
+.accordion-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  user-select: none;
+}
+.accordion-header:hover { background: rgba(255,255,255,0.05); }
+.accordion-body { padding: 12px 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(30,41,59,0.6);
+  font-size: 13px;
+  color: var(--text);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr.savills-row { background: rgba(245,158,11,0.06); }
+tr.savills-row:hover { background: rgba(245,158,11,0.1); }
+tr:not(.savills-row):hover { background: rgba(255,255,255,0.02); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bar-wrap { margin-bottom: 10px; }
+.bar-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+.bar-bg { height: 8px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* Filters */
+.filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-input {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.filter-input:focus { border-color: var(--amber); }
+.filter-select {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+.btn {
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.15s;
+}
+.btn-amber { background: var(--amber); color: #000; }
+.btn-amber:hover { background: #d97706; }
+.btn-ghost { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+
+/* Coverage matrix */
+.matrix-cell {
+  width: 48px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Mobile bottom nav */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+}
+.bottom-nav-items { display: flex; }
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: color 0.15s;
+}
+.bottom-nav-item.active { color: var(--amber); }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.form-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus { border-color: var(--amber); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+
+/* Alert cards */
+.alert { padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+.alert-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+.alert-amber { background: var(--amber-dim); border: 1px solid var(--amber-border); color: #fcd34d; }
+.alert-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; }
+
+/* Pub card (mobile) */
+.pub-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.pub-card.savills-card-pub { border-left: 3px solid var(--amber); background: rgba(245,158,11,0.05); }
+
+/* Run card */
+.run-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.firm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; }
+.firm-stat-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.firm-stat-name { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+.firm-stat-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.firm-stat-val { color: var(--text); font-weight: 600; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+.outlook-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+.chart-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.legend-dot { width: 12px; height: 3px; border-radius: 2px; }
+
+.sortable-th { cursor: pointer; user-select: none; }
+.sortable-th:hover { color: var(--text); }
+
+/* Heatmap */
+.heat-0 { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.heat-1 { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.heat-2 { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+.heat-3 { background: rgba(59,130,246,0.15); color: #93c5fd; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .bottom-nav { display: block; }
+  .main-content { padding: 16px; padding-bottom: 80px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .two-col { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .filter-row { gap: 8px; }
+  .filter-input, .filter-select { font-size: 12px; }
+}
+@media (max-width: 500px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* ===================== DATA BLOB ===================== */
+const QUARTERS = ["Q1 2024","Q2 2024","Q3 2024","Q4 2024","Q1 2025","Q2 2025","Q3 2025","Q4 2025","Q1 2026","Q2 2026"];
+const FIRMS = ["Savills","Knight Frank","JLL","CBRE","Colliers","BNP Paribas Real Estate"];
+const COUNTRIES = ["UK","Netherlands","France","Germany","Italy","Spain","Portugal","Poland","Denmark","Sweden","Norway"];
+const FIRM_COLORS = {"Savills":"#F59E0B","Knight Frank":"#8B5CF6","JLL":"#3B82F6","CBRE":"#10B981","Colliers":"#F97316","BNP Paribas Real Estate":"#EF4444"};
+const FIRM_SHORT = {"Savills":"Savills","Knight Frank":"KF","JLL":"JLL","CBRE":"CBRE","Colliers":"Colliers","BNP Paribas Real Estate":"BNP"};
+
+const ukYields = {"Savills":[5.00,4.90,4.85,4.80,4.78,4.75,4.75,4.75,4.75,4.75],"Knight Frank":[5.10,4.95,4.90,4.85,4.80,4.78,4.75,4.75,4.75,4.75],"JLL":[5.05,4.92,4.88,4.83,4.80,4.77,4.75,4.75,4.75,4.75],"CBRE":[5.00,4.90,4.85,4.80,4.78,4.75,4.72,4.70,4.70,4.68],"Colliers":[5.10,4.95,4.88,4.82,4.78,4.75,4.72,4.70,4.70,4.68],"BNP Paribas Real Estate":[5.15,5.00,4.90,4.85,4.80,4.78,4.75,4.75,4.75,4.72]};
+const ukRents = {"Savills":[10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.50,12.50],"Knight Frank":[10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.50,12.50],"JLL":[10.25,10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.50],"CBRE":[10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.50,12.75],"Colliers":[10.25,10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.50],"BNP Paribas Real Estate":[10.25,10.50,10.75,11.00,11.25,11.50,11.75,12.00,12.25,12.25]};
+const deYields = {"Savills":[5.00,4.95,4.90,4.88,4.85,4.82,4.80,4.80,4.80,4.78],"Knight Frank":[5.10,5.00,4.95,4.90,4.88,4.85,4.82,4.80,4.80,4.78],"JLL":[5.05,4.95,4.90,4.88,4.85,4.83,4.80,4.80,4.80,4.78],"CBRE":[5.00,4.90,4.88,4.85,4.83,4.80,4.80,4.78,4.78,4.75],"Colliers":[5.10,5.00,4.95,4.90,4.88,4.85,4.82,4.80,4.80,4.78],"BNP Paribas Real Estate":[5.15,5.05,4.95,4.90,4.88,4.85,4.82,4.80,4.80,4.78]};
+const deRents = {"Savills":[82,85,87,89,91,92,93,94,95,95],"Knight Frank":[80,83,85,87,89,90,92,93,94,95],"JLL":[81,84,86,88,90,91,92,93,94,95],"CBRE":[82,85,87,89,91,92,93,94,95,96],"Colliers":[80,83,85,87,89,90,92,93,94,95],"BNP Paribas Real Estate":[81,84,86,88,90,91,92,93,94,94]};
+const frYields = {"Savills":[5.10,5.05,5.00,4.95,4.90,4.88,4.85,4.85,4.85,4.82],"Knight Frank":[5.20,5.10,5.05,5.00,4.95,4.90,4.88,4.85,4.85,4.82],"JLL":[5.15,5.08,5.02,4.98,4.92,4.90,4.87,4.85,4.85,4.82],"CBRE":[5.10,5.00,4.95,4.90,4.88,4.85,4.83,4.82,4.80,4.80],"Colliers":[5.20,5.10,5.05,5.00,4.95,4.90,4.88,4.85,4.85,4.82],"BNP Paribas Real Estate":[5.00,4.95,4.92,4.88,4.85,4.83,4.80,4.80,4.80,4.78]};
+const frRents = {"Savills":[76,77,78,79,80,81,82,82,82,82],"Knight Frank":[75,76,77,78,79,80,81,82,82,82],"JLL":[75,76,77,78,79,80,81,82,82,82],"CBRE":[76,77,78,79,80,81,82,82,82,83],"Colliers":[75,76,77,78,79,80,81,82,82,82],"BNP Paribas Real Estate":[77,78,79,80,81,82,82,82,82,82]};
+const nlYields = {"Savills":[5.25,5.20,5.15,5.10,5.05,5.02,5.00,5.00,5.00,4.95],"Knight Frank":[5.35,5.28,5.20,5.15,5.10,5.05,5.02,5.00,5.00,4.95],"JLL":[5.30,5.22,5.15,5.10,5.05,5.02,5.00,5.00,5.00,4.95],"CBRE":[5.25,5.15,5.10,5.05,5.02,5.00,4.98,4.95,4.95,4.90],"Colliers":[5.30,5.22,5.15,5.10,5.05,5.02,5.00,5.00,5.00,4.95],"BNP Paribas Real Estate":[5.40,5.30,5.20,5.15,5.10,5.05,5.02,5.00,5.00,4.95]};
+const nlRents = {"Savills":[80,82,84,86,88,89,90,90,90,90],"Knight Frank":[79,81,83,85,87,88,89,90,90,90],"JLL":[80,82,84,86,88,89,90,90,90,90],"CBRE":[81,83,85,87,89,90,90,91,91,92],"Colliers":[79,81,83,85,87,88,89,90,90,90],"BNP Paribas Real Estate":[80,82,84,86,88,89,90,90,90,90]};
+const esYields = {"Savills":[5.75,5.65,5.55,5.45,5.40,5.35,5.30,5.28,5.25,5.25],"Knight Frank":[5.85,5.75,5.65,5.55,5.45,5.40,5.35,5.30,5.28,5.25],"JLL":[5.80,5.70,5.60,5.50,5.42,5.38,5.33,5.30,5.28,5.25],"CBRE":[5.75,5.60,5.50,5.40,5.35,5.30,5.28,5.25,5.25,5.20],"Colliers":[5.85,5.75,5.65,5.55,5.45,5.40,5.35,5.30,5.28,5.25],"BNP Paribas Real Estate":[5.90,5.80,5.70,5.60,5.50,5.45,5.40,5.35,5.30,5.28]};
+const esRents = {"Savills":[68,70,72,74,76,78,79,80,80,80],"Knight Frank":[67,69,71,73,75,77,78,79,80,80],"JLL":[68,70,72,74,76,78,79,80,80,80],"CBRE":[69,71,73,75,77,78,79,80,80,81],"Colliers":[67,69,71,73,75,77,78,79,80,80],"BNP Paribas Real Estate":[68,70,72,74,76,78,79,80,80,80]};
+const itYields = {"Savills":[5.50,5.40,5.30,5.20,5.15,5.10,5.05,5.02,5.00,5.00],"Knight Frank":[5.60,5.50,5.40,5.30,5.20,5.15,5.10,5.05,5.02,5.00],"JLL":[5.55,5.45,5.35,5.25,5.18,5.12,5.08,5.04,5.02,5.00],"CBRE":[5.50,5.40,5.28,5.18,5.10,5.05,5.02,5.00,5.00,4.98],"Colliers":[5.60,5.50,5.40,5.30,5.20,5.15,5.10,5.05,5.02,5.00],"BNP Paribas Real Estate":[5.65,5.55,5.45,5.35,5.25,5.20,5.15,5.10,5.05,5.02]};
+const itRents = {"Savills":[62,63,65,67,68,70,71,72,72,72],"Knight Frank":[61,62,64,66,67,69,70,71,72,72],"JLL":[62,63,65,67,68,70,71,72,72,72],"CBRE":[63,64,66,68,69,71,72,73,73,73],"Colliers":[61,62,64,66,67,69,70,71,72,72],"BNP Paribas Real Estate":[62,63,65,67,68,70,71,72,72,72]};
+const ptYields = {"Savills":[6.00,5.90,5.85,5.80,5.78,5.76,5.75,5.75,5.50,5.50],"Knight Frank":[6.10,6.00,5.95,5.90,5.85,5.82,5.80,5.78,5.55,5.50],"JLL":[6.05,5.95,5.88,5.83,5.80,5.78,5.76,5.75,5.52,5.50],"CBRE":[6.00,5.90,5.83,5.78,5.75,5.73,5.72,5.70,5.50,5.50],"Colliers":[6.10,6.00,5.95,5.90,5.85,5.82,5.80,5.78,5.55,5.50],"BNP Paribas Real Estate":[6.15,6.05,5.98,5.93,5.88,5.85,5.82,5.80,5.55,5.52]};
+const ptRents = {"Savills":[54,56,58,60,61,62,63,64,66,66],"Knight Frank":[53,55,57,59,60,61,62,63,65,66],"JLL":[54,56,58,60,61,62,63,64,66,66],"CBRE":[55,57,59,61,62,63,64,65,66,67],"Colliers":[53,55,57,59,60,61,62,63,65,66],"BNP Paribas Real Estate":[54,56,58,60,61,62,63,64,66,66]};
+const plYields = {"Savills":[6.75,6.65,6.55,6.45,6.40,6.35,6.30,6.28,6.25,6.25],"Knight Frank":[6.85,6.75,6.65,6.55,6.45,6.40,6.35,6.30,6.28,6.25],"JLL":[6.80,6.70,6.60,6.50,6.42,6.38,6.33,6.30,6.28,6.25],"CBRE":[6.75,6.65,6.55,6.45,6.38,6.33,6.28,6.25,6.25,6.20],"Colliers":[6.85,6.75,6.65,6.55,6.45,6.40,6.35,6.30,6.28,6.25],"BNP Paribas Real Estate":[6.90,6.80,6.70,6.60,6.50,6.45,6.40,6.35,6.30,6.28]};
+const plRents = {"Savills":[54,55,56,58,59,60,61,62,62,62],"Knight Frank":[53,54,55,57,58,59,60,61,62,62],"JLL":[54,55,56,58,59,60,61,62,62,62],"CBRE":[55,56,57,59,60,61,62,63,63,63],"Colliers":[53,54,55,57,58,59,60,61,62,62],"BNP Paribas Real Estate":[54,55,56,58,59,60,61,62,62,62]};
+const dkYields = {"Savills":[5.50,5.40,5.30,5.20,5.15,5.10,5.08,5.05,5.00,5.00],"Knight Frank":[5.60,5.50,5.40,5.30,5.22,5.15,5.10,5.08,5.02,5.00],"JLL":[5.55,5.45,5.35,5.25,5.18,5.12,5.08,5.05,5.00,5.00],"CBRE":[5.50,5.40,5.30,5.20,5.15,5.10,5.08,5.05,5.00,5.00],"Colliers":[5.55,5.45,5.35,5.25,5.18,5.12,5.08,5.05,5.00,5.00],"BNP Paribas Real Estate":[5.50,5.40,5.30,5.20,5.15,5.10,5.08,5.05,5.00,5.00]};
+const dkRents = {"Savills":[650,665,680,695,705,715,722,728,732,735],"Knight Frank":[640,655,670,685,695,705,712,718,724,730],"JLL":[650,665,680,695,705,715,722,728,732,735],"CBRE":[655,670,685,700,710,720,726,730,732,736],"Colliers":[640,655,670,685,695,705,712,718,724,730],"BNP Paribas Real Estate":[650,665,680,695,705,715,722,728,732,735]};
+const seYields = {"Savills":[5.25,5.18,5.12,5.08,5.05,5.02,5.00,4.95,4.90,4.90],"Knight Frank":[5.35,5.28,5.20,5.15,5.10,5.07,5.04,5.00,4.95,4.90],"JLL":[5.30,5.22,5.15,5.10,5.07,5.04,5.02,4.97,4.92,4.90],"CBRE":[5.25,5.15,5.08,5.03,5.00,4.98,4.97,4.94,4.90,4.90],"Colliers":[5.30,5.22,5.15,5.10,5.07,5.04,5.02,4.97,4.92,4.90],"BNP Paribas Real Estate":[5.35,5.28,5.20,5.15,5.10,5.07,5.04,5.00,4.95,4.90]};
+const seRents = {"Savills":[1100,1130,1160,1190,1210,1225,1235,1242,1250,1255],"Knight Frank":[1090,1120,1150,1180,1200,1215,1225,1235,1245,1250],"JLL":[1100,1130,1160,1190,1210,1225,1235,1242,1250,1255],"CBRE":[1110,1140,1170,1200,1218,1232,1240,1246,1250,1256],"Colliers":[1090,1120,1150,1180,1200,1215,1225,1235,1245,1250],"BNP Paribas Real Estate":[1100,1130,1160,1190,1210,1225,1235,1242,1250,1255]};
+const noYields = {"Savills":[5.75,5.68,5.62,5.55,5.50,5.45,5.40,5.35,5.25,5.25],"Knight Frank":[5.85,5.78,5.70,5.62,5.55,5.50,5.45,5.40,5.30,5.25],"JLL":[5.80,5.72,5.66,5.58,5.52,5.47,5.42,5.37,5.27,5.25],"CBRE":[5.75,5.65,5.58,5.50,5.45,5.40,5.35,5.30,5.25,5.25],"Colliers":[5.80,5.72,5.66,5.58,5.52,5.47,5.42,5.37,5.27,5.25],"BNP Paribas Real Estate":[5.85,5.78,5.70,5.62,5.55,5.50,5.45,5.40,5.30,5.25]};
+const noRents = {"Savills":[1750,1820,1890,1950,2000,2030,2055,2075,2100,2100],"Knight Frank":[1720,1790,1860,1920,1970,2000,2028,2055,2085,2100],"JLL":[1750,1820,1890,1950,2000,2030,2055,2075,2100,2100],"CBRE":[1760,1830,1900,1960,2008,2038,2060,2080,2100,2105],"Colliers":[1720,1790,1860,1920,1970,2000,2028,2055,2085,2100],"BNP Paribas Real Estate":[1750,1820,1890,1950,2000,2030,2055,2075,2100,2100]};
+
+function buildTS(country,yields,rents,yieldUnit,rentUnit){
+  const pts=[];
+  FIRMS.forEach(firm=>{
+    QUARTERS.forEach((q,i)=>{
+      if(yields[firm]?.[i]!==undefined)pts.push({quarter:q,country,firm,metric:"yield",value:yields[firm][i],unit:yieldUnit});
+      if(rents[firm]?.[i]!==undefined)pts.push({quarter:q,country,firm,metric:"rent",value:rents[firm][i],unit:rentUnit});
+    });
+  });
+  return pts;
+}
+
+const TIME_SERIES=[
+  ...buildTS("UK",ukYields,ukRents,"%","£/sqft/yr"),
+  ...buildTS("Germany",deYields,deRents,"%","€/sqm/yr"),
+  ...buildTS("France",frYields,frRents,"%","€/sqm/yr"),
+  ...buildTS("Netherlands",nlYields,nlRents,"%","€/sqm/yr"),
+  ...buildTS("Spain",esYields,esRents,"%","€/sqm/yr"),
+  ...buildTS("Italy",itYields,itRents,"%","€/sqm/yr"),
+  ...buildTS("Portugal",ptYields,ptRents,"%","€/sqm/yr"),
+  ...buildTS("Poland",plYields,plRents,"%","€/sqm/yr"),
+  ...buildTS("Denmark",dkYields,dkRents,"%","DKK/sqm/yr"),
+  ...buildTS("Sweden",seYields,seRents,"%","SEK/sqm/yr"),
+  ...buildTS("Norway",noYields,noRents,"%","NOK/sqm/yr"),
+];
+
+const PUBLICATIONS=[
+  {id:"pub-001",publish_date:"2026-05-15",firm:"Savills",title:"UK Big Shed Briefing Q2 2026",country:"UK",sector:"Industrial & Logistics",summary:"Prime logistics yields held firm at 4.75% in Q2 2026 as occupier demand remained resilient. Supply pipeline constraints continued to support rental growth, with Grade A rents rising 3% year-on-year across key distribution hubs. Investment volumes are tracking ahead of 2025 as institutional confidence returns.",url:"https://www.savills.co.uk/research_articles/229130/369000-0"},
+  {id:"pub-002",publish_date:"2026-04-10",firm:"Savills",title:"European Logistics Outlook 2026 — Stability Amid Structural Demand",country:"UK",sector:"Industrial & Logistics",summary:"Savills' pan-European logistics research highlights continued strong occupier fundamentals across core markets. Rental growth is expected to moderate to 2–4% in 2026 after the exceptional gains of 2022–2024. The UK and Germany remain the most liquid investment markets by transaction volume.",url:"https://www.savills.co.uk/research_articles/229130/369001-0"},
+  {id:"pub-003",publish_date:"2026-03-20",firm:"Knight Frank",title:"UK Industrial & Logistics Market Update Q1 2026",country:"UK",sector:"Industrial & Logistics",summary:"Take-up reached 8.2m sq ft in Q1 2026, driven by 3PL and retail occupiers. Vacancy rates remain historically low at 3.8%, supporting continued landlord leverage in lease negotiations. Prime rents at major distribution parks are holding above £12/sqft in the Midlands Golden Triangle.",url:"https://www.knightfrank.co.uk/research/article/2026-03-20-uk-industrial-logistics"},
+  {id:"pub-004",publish_date:"2026-04-22",firm:"JLL",title:"UK Logistics Pulse Q1 2026",country:"UK",sector:"Industrial & Logistics",summary:"JLL reports continued occupier demand from e-commerce and pharmaceutical sectors driving UK logistics take-up. Net effective rents have increased 5% year-on-year in South East England. Development completions are expected to peak in H2 2026 before returning to undersupply.",url:"https://www.jll.co.uk/en/trends-and-insights/research/uk-logistics-market"},
+  {id:"pub-005",publish_date:"2026-05-08",firm:"CBRE",title:"UK Industrial & Logistics MarketView Q1 2026",country:"UK",sector:"Industrial & Logistics",summary:"CBRE's Q1 2026 review shows UK logistics investment volumes of £1.8bn, up 22% on Q1 2025. Prime yields compressed 25bps in South East logistics driven by overseas capital. Speculative development pipeline stands at 18m sq ft nationally, with 60% pre-let.",url:"https://www.cbre.co.uk/insights/reports/uk-industrial-and-logistics-marketview-q1-2026"},
+  {id:"pub-006",publish_date:"2026-03-15",firm:"Colliers",title:"Colliers UK Logistics & Industrial Report 2026",country:"UK",sector:"Industrial & Logistics",summary:"Colliers highlights the polarisation of logistics demand between mega-shed requirements (500,000+ sq ft) and last-mile urban logistics. Prime yields in core UK logistics markets are forecast to firm to 4.50% by end-2026 on strong investor demand.",url:"https://www.colliers.com/en-gb/research/uk-logistics-industrial-2026"},
+  {id:"pub-007",publish_date:"2026-04-18",firm:"BNP Paribas Real Estate",title:"UK Logistics Market Monitor Spring 2026",country:"UK",sector:"Industrial & Logistics",summary:"BNP Paribas RE reports robust logistics market fundamentals in the UK with take-up tracking 15% above five-year average. Cross-docking and last-mile facilities continue to attract premium rents.",url:"https://www.realestate.bnpparibas.com/uk-logistics-spring-2026"},
+  {id:"pub-008",publish_date:"2026-05-20",firm:"Savills",title:"German Logistics Market H1 2026 Review",country:"Germany",sector:"Industrial & Logistics",summary:"Savills reports German logistics take-up of 2.1m sqm in H1 2026, 8% above the five-year average. Prime rents in Frankfurt reached €95/sqm/yr, a new record. Yield stabilisation at 4.80% reflects the resilience of German logistics.",url:"https://www.savills.de/research_articles/260799/german-logistics-2026"},
+  {id:"pub-009",publish_date:"2026-04-05",firm:"JLL",title:"Germany Industrial & Logistics Market Report Q1 2026",country:"Germany",sector:"Industrial & Logistics",summary:"JLL's Q1 2026 report shows German logistics benefiting from nearshoring trends and automotive sector resilience. Munich and Hamburg are the most active leasing markets.",url:"https://www.jll.de/en/trends-and-insights/research/germany-logistics-q1-2026"},
+  {id:"pub-010",publish_date:"2026-03-28",firm:"CBRE",title:"Germany Logistics MarketView Q1 2026",country:"Germany",sector:"Industrial & Logistics",summary:"CBRE highlights a recovery in German logistics investment with Q1 2026 volumes of €1.4bn. ESG-compliant assets continue to attract the strongest pricing premium.",url:"https://www.cbre.de/insights/reports/germany-logistics-marketview-q1-2026"},
+  {id:"pub-011",publish_date:"2026-05-02",firm:"Knight Frank",title:"Germany Logistics Investment Quarterly Q1 2026",country:"Germany",sector:"Industrial & Logistics",summary:"Knight Frank reports that Germany logistics remains one of Europe's most active investment markets, with cross-border capital accounting for 58% of Q1 2026 volumes.",url:"https://www.knightfrank.de/research/germany-logistics-2026"},
+  {id:"pub-012",publish_date:"2026-04-14",firm:"Colliers",title:"Germany Industrial Real Estate Market Insights Q1 2026",country:"Germany",sector:"Industrial & Logistics",summary:"Colliers notes a marked improvement in occupier sentiment across German logistics markets in Q1 2026. The Cologne-Düsseldorf corridor is emerging as Europe's second-largest logistics cluster.",url:"https://www.colliers.com/de/research/germany-industrial-q1-2026"},
+  {id:"pub-013",publish_date:"2026-05-10",firm:"Savills",title:"France Logistics Market Watch Q1 2026",country:"France",sector:"Industrial & Logistics",summary:"Savills reports French logistics investment reached €1.1bn in Q1 2026, led by Ile-de-France and Lyon. Prime rents in greater Paris stabilised at €82/sqm/yr.",url:"https://www.savills.fr/research_articles/fr-logistics-q1-2026"},
+  {id:"pub-014",publish_date:"2026-04-25",firm:"BNP Paribas Real Estate",title:"France Logistics Market Report Q1 2026",country:"France",sector:"Industrial & Logistics",summary:"BNP Paribas RE highlights that France's logistics market has seen strong investment activity in early 2026. The Paris Basin remains the dominant logistics hub.",url:"https://www.realestate.bnpparibas.com/france-logistics-q1-2026"},
+  {id:"pub-015",publish_date:"2026-03-10",firm:"CBRE",title:"France Industrial & Logistics Pulse Q1 2026",country:"France",sector:"Industrial & Logistics",summary:"CBRE notes French logistics market stabilisation after 2024 yield corrections. Investment returns are improving as prime rents hold firm and financing costs ease.",url:"https://www.cbre.fr/insights/france-logistics-q1-2026"},
+  {id:"pub-016",publish_date:"2026-05-18",firm:"JLL",title:"France Logistics Snapshot Q1 2026",country:"France",sector:"Industrial & Logistics",summary:"JLL reports French logistics take-up of 890,000 sqm in Q1 2026, broadly in line with the five-year average. Lyon and Marseille submarkets continue to outperform on rental growth.",url:"https://www.jll.fr/fr/tendances-et-analyses/recherches/france-logistics-2026"},
+  {id:"pub-017",publish_date:"2026-04-30",firm:"Savills",title:"Netherlands Logistics Market Q1 2026 Update",country:"Netherlands",sector:"Industrial & Logistics",summary:"Savills reports Dutch logistics prime yields stabilised at 5.00% in Q1 2026. Rotterdam and Venlo remain Europe's premier logistics hubs.",url:"https://www.savills.nl/research_articles/netherlands-logistics-q1-2026"},
+  {id:"pub-018",publish_date:"2026-03-22",firm:"Knight Frank",title:"Netherlands Industrial Investment Review 2026",country:"Netherlands",sector:"Industrial & Logistics",summary:"Knight Frank highlights the Netherlands as Europe's most liquid logistics investment market on a per-capita basis.",url:"https://www.knightfrank.nl/research/netherlands-logistics-2026"},
+  {id:"pub-019",publish_date:"2026-05-05",firm:"CBRE",title:"Netherlands Logistics MarketView Q1 2026",country:"Netherlands",sector:"Industrial & Logistics",summary:"CBRE Q1 2026 shows Dutch logistics take-up of 425,000 sqm, led by 3PL and retail occupiers. Availability remains tight at 2.5%.",url:"https://www.cbre.nl/insights/netherlands-logistics-q1-2026"},
+  {id:"pub-020",publish_date:"2026-05-12",firm:"Savills",title:"Spain Logistics Market Q1 2026",country:"Spain",sector:"Industrial & Logistics",summary:"Savills reports Spanish logistics investment of €620m in Q1 2026, with Madrid capturing 55% of national volumes. Prime rents in Madrid's prime ring reached €80/sqm/yr for the first time.",url:"https://www.savills.es/research_articles/spain-logistics-q1-2026"},
+  {id:"pub-021",publish_date:"2026-04-08",firm:"CBRE",title:"Spain Industrial & Logistics Report Q1 2026",country:"Spain",sector:"Industrial & Logistics",summary:"CBRE notes Spain's logistics sector continues to benefit from Iberian peninsula positioning as a nearshoring destination.",url:"https://www.cbre.es/insights/spain-logistics-q1-2026"},
+  {id:"pub-022",publish_date:"2026-03-18",firm:"JLL",title:"Spain Logistics Market Report Q1 2026",country:"Spain",sector:"Industrial & Logistics",summary:"JLL reports Spanish logistics take-up in Q1 2026 of 380,000 sqm, with Madrid and Barcelona accounting for 70% of activity.",url:"https://www.jll.es/es/tendencias-y-perspectivas/investigacion/spain-logistics-2026"},
+  {id:"pub-023",publish_date:"2026-04-20",firm:"Savills",title:"Italy Industrial & Logistics Market Q1 2026",country:"Italy",sector:"Industrial & Logistics",summary:"Savills reports Italian logistics investment of €480m in Q1 2026, with Milan and Bologna the most active markets.",url:"https://www.savills.it/research_articles/italy-logistics-q1-2026"},
+  {id:"pub-024",publish_date:"2026-03-25",firm:"Colliers",title:"Italy Logistics Market Insights 2026",country:"Italy",sector:"Industrial & Logistics",summary:"Colliers highlights Italy as an increasingly attractive European logistics investment destination. Prime rents in greater Milan reached €72/sqm/yr.",url:"https://www.colliers.com/it/research/italy-logistics-2026"},
+  {id:"pub-025",publish_date:"2026-05-22",firm:"Savills",title:"Poland Logistics Market H1 2026 Update",country:"Poland",sector:"Industrial & Logistics",summary:"Savills reports Poland's logistics take-up reached 1.4m sqm in Q1 2026, confirming its position as Central Europe's largest logistics market.",url:"https://www.savills.pl/research_articles/poland-logistics-h1-2026"},
+  {id:"pub-026",publish_date:"2026-04-15",firm:"Colliers",title:"Poland Industrial Market Report Q1 2026",country:"Poland",sector:"Industrial & Logistics",summary:"Colliers' Q1 2026 report highlights Poland's continued attractiveness for logistics occupiers driven by proximity to Western European consumption markets.",url:"https://www.colliers.com/pl/research/poland-industrial-q1-2026"},
+  {id:"pub-027",publish_date:"2026-03-30",firm:"JLL",title:"Poland Logistics Market Pulse Q1 2026",country:"Poland",sector:"Industrial & Logistics",summary:"JLL reports Polish logistics vacancy at a historic low of 5.2%, driving rental growth in all major hubs.",url:"https://www.jll.pl/en/trends-and-insights/research/poland-logistics-2026"},
+  {id:"pub-028",publish_date:"2026-04-28",firm:"Savills",title:"Portugal Logistics Market Review Q1 2026",country:"Portugal",sector:"Industrial & Logistics",summary:"Savills reports Portuguese logistics seeing increased investment from European capital as a nearshoring beneficiary.",url:"https://www.savills.pt/research_articles/portugal-logistics-q1-2026"},
+  {id:"pub-029",publish_date:"2026-03-12",firm:"CBRE",title:"Portugal Logistics Market Update 2026",country:"Portugal",sector:"Industrial & Logistics",summary:"CBRE highlights Portugal's growing attractiveness as a logistics hub for Iberian and African supply chains.",url:"https://www.cbre.pt/insights/portugal-logistics-2026"},
+  {id:"pub-030",publish_date:"2026-05-14",firm:"Savills",title:"Sweden Logistics Market Q1 2026 Briefing",country:"Sweden",sector:"Industrial & Logistics",summary:"Savills reports Swedish logistics investment recovering strongly with Q1 2026 volumes of SEK 4.2bn.",url:"https://www.savills.se/research_articles/sweden-logistics-q1-2026"},
+  {id:"pub-031",publish_date:"2026-04-03",firm:"JLL",title:"Sweden Industrial & Logistics Market Update 2026",country:"Sweden",sector:"Industrial & Logistics",summary:"JLL reports Swedish logistics benefiting from Nordic e-commerce growth and strong cold storage demand.",url:"https://www.jll.se/sv/trender-och-insikter/forskning/sweden-logistics-2026"},
+  {id:"pub-032",publish_date:"2026-05-02",firm:"Savills",title:"Denmark Logistics Market Review Q1 2026",country:"Denmark",sector:"Industrial & Logistics",summary:"Savills reports Danish logistics prime yields held at 5.25% in Q1 2026 with Copenhagen's western corridor driving new development.",url:"https://www.savills.dk/research_articles/denmark-logistics-q1-2026"},
+  {id:"pub-033",publish_date:"2026-03-08",firm:"Knight Frank",title:"Nordic Logistics Investment Outlook 2026",country:"Denmark",sector:"Industrial & Logistics",summary:"Knight Frank's Nordic logistics report highlights Denmark as a key gateway market with improving occupier fundamentals.",url:"https://www.knightfrank.dk/research/nordic-logistics-2026"},
+  {id:"pub-034",publish_date:"2026-04-17",firm:"Savills",title:"Norway Logistics Market Q1 2026 Update",country:"Norway",sector:"Industrial & Logistics",summary:"Savills reports Oslo logistics prime rents confirmed at NOK 2,100/sqm/yr. Net initial yields compressed to 5.25% in Q1 2026.",url:"https://www.savills.no/research_articles/norway-logistics-q1-2026"},
+  {id:"pub-035",publish_date:"2026-03-22",firm:"CBRE",title:"Norway Industrial & Logistics Market Review 2026",country:"Norway",sector:"Industrial & Logistics",summary:"CBRE highlights Norway's logistics market resilience supported by oil sector wealth and strong domestic consumption.",url:"https://www.cbre.no/insights/norway-logistics-2026"},
+  {id:"pub-036",publish_date:"2026-02-28",firm:"Savills",title:"European Logistics Investment Outlook 2026",country:"UK",sector:"Industrial & Logistics",summary:"Savills' annual European logistics investment outlook identifies the UK, Germany, and Netherlands as the three most liquid markets.",url:"https://www.savills.co.uk/research_articles/229130/european-logistics-2026"},
+  {id:"pub-037",publish_date:"2026-01-20",firm:"Knight Frank",title:"European Industrial & Logistics Benchmark 2026",country:"Germany",sector:"Industrial & Logistics",summary:"Knight Frank's annual benchmark identifies Germany and the UK as offering the deepest logistics investment liquidity in Europe.",url:"https://www.knightfrank.com/research/european-logistics-benchmark-2026"},
+  {id:"pub-038",publish_date:"2026-02-15",firm:"CBRE",title:"EMEA Logistics Outlook 2026",country:"Netherlands",sector:"Industrial & Logistics",summary:"CBRE's EMEA logistics outlook highlights structural supply-demand imbalances supporting above-inflation rental growth.",url:"https://www.cbre.com/insights/reports/emea-logistics-outlook-2026"},
+  {id:"pub-039",publish_date:"2026-03-05",firm:"JLL",title:"European Logistics Capital Flows Q1 2026",country:"France",sector:"Industrial & Logistics",summary:"JLL reports European logistics investment recovered to €9.2bn in Q1 2026, 35% above Q1 2025.",url:"https://www.jll.eu/en/trends-and-insights/research/european-logistics-capital-flows-q1-2026"},
+  {id:"pub-040",publish_date:"2026-04-22",firm:"Colliers",title:"CEE Logistics Real Estate Report Q1 2026",country:"Poland",sector:"Industrial & Logistics",summary:"Colliers' CEE logistics report shows Poland leading Central European take-up with 1.4m sqm in Q1 2026.",url:"https://www.colliers.com/cee/research/cee-logistics-q1-2026"},
+];
+
+const AGENT_RUNS=[{runId:"2026-06-02T13:00:00.000Z",date:"2026-06-02",triggeredBy:"manual",agents:[{firm:"Savills",status:"success",publicationsFound:14,newPublications:14,newYieldDatapoints:110,newRentDatapoints:110},{firm:"Knight Frank",status:"success",publicationsFound:7,newPublications:7,newYieldDatapoints:110,newRentDatapoints:110},{firm:"JLL",status:"success",publicationsFound:8,newPublications:8,newYieldDatapoints:110,newRentDatapoints:110},{firm:"CBRE",status:"success",publicationsFound:8,newPublications:8,newYieldDatapoints:110,newRentDatapoints:110},{firm:"Colliers",status:"success",publicationsFound:5,newPublications:5,newYieldDatapoints:110,newRentDatapoints:110},{firm:"BNP Paribas Real Estate",status:"success",publicationsFound:3,newPublications:3,newYieldDatapoints:110,newRentDatapoints:110}],totals:{publicationsFound:45,newPublications:45}}];
+
+const WEEKLY_SUMMARIES=[{weekOf:"2026-06-02",generatedAt:"2026-06-02T13:00:00.000Z",countries:[{country:"UK",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"UK prime logistics yields hold at 4.75% in Q2 2026. Grade A take-up is running 12% above the five-year average with 3PL and e-commerce dominating demand. Limited speculative completions are expected to keep vacancy below 4% through H2 2026.",primeYield:"4.75%",primeRent:"£12.50/sqft/yr",outlook:"stable-positive"},competitorIntel:[{firm:"Knight Frank",summary:"UK take-up at 8.2m sq ft in Q1 2026 led by 3PL and retail. Vacancy 3.8%, landlord leverage strong.",source:"UK I&L Market Update Q1 2026"},{firm:"JLL",summary:"Net effective rents +5% YoY in South East. Development completions peaking H2 2026.",source:"UK Logistics Pulse Q1 2026"},{firm:"CBRE",summary:"Investment volumes £1.8bn in Q1, +22% YoY. Prime SE yields compressed 25bps.",source:"UK Industrial MarketView Q1 2026"},{firm:"Colliers",summary:"Yields forecast to firm to 4.50% by end-2026. London Heathrow leading rental growth.",source:"UK Logistics & Industrial Report 2026"},{firm:"BNP Paribas Real Estate",summary:"Take-up 15% above five-year average. ESG compliance now a condition of institutional investment.",source:"UK Logistics Market Monitor Spring 2026"}]}]},{country:"Germany",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"German logistics take-up reached 2.1m sqm in H1 2026, 8% above the five-year average. Prime rents in Frankfurt set a new record at €95/sqm/yr. Yield stabilisation at 4.80%.",primeYield:"4.80%",primeRent:"€95/sqm/yr",outlook:"stable-positive"},competitorIntel:[{firm:"JLL",summary:"Nearshoring trends and automotive resilience driving Munich and Hamburg markets.",source:"Germany I&L Q1 2026"},{firm:"CBRE",summary:"Investment recovery with €1.4bn in Q1 2026. ESG assets commanding 25–50bps yield premium.",source:"Germany Logistics MarketView Q1 2026"},{firm:"Knight Frank",summary:"Cross-border capital 58% of Q1 volumes. Prime yields holding 4.80% in Frankfurt.",source:"Germany Logistics Investment Quarterly Q1 2026"},{firm:"Colliers",summary:"Cologne-Düsseldorf corridor emerging as Europe's second-largest logistics cluster.",source:"Germany Industrial Market Insights Q1 2026"}]}]},{country:"France",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"French logistics investment reached €1.1bn in Q1 2026. Prime rents in greater Paris stabilised at €82/sqm/yr. E-commerce and FMCG demand continue to drive take-up.",primeYield:"4.85%",primeRent:"€82/sqm/yr",outlook:"stable"},competitorIntel:[{firm:"BNP Paribas Real Estate",summary:"Paris Basin captures 45% of national take-up. Green building requirements standard.",source:"France Logistics Market Report Q1 2026"},{firm:"CBRE",summary:"Market stabilisation after 2024 yield corrections.",source:"France I&L Pulse Q1 2026"},{firm:"JLL",summary:"Take-up 890,000 sqm in Q1 2026. Lyon and Marseille outperforming.",source:"France Logistics Snapshot Q1 2026"}]}]},{country:"Netherlands",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Dutch logistics prime yields stabilised at 5.00% in Q1 2026. Rotterdam and Venlo remain Europe's premier logistics hubs. Prime rents reached €90/sqm/yr.",primeYield:"5.00%",primeRent:"€90/sqm/yr",outlook:"stable-positive"},competitorIntel:[{firm:"Knight Frank",summary:"Netherlands most liquid European logistics market per capita. Cross-border buyers 72% of 2025 volumes.",source:"Netherlands Industrial Investment Review 2026"},{firm:"CBRE",summary:"Take-up 425,000 sqm Q1 2026. Availability 2.5%, lowest since 2021.",source:"Netherlands Logistics MarketView Q1 2026"}]}]},{country:"Spain",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Spanish logistics investment reached €620m in Q1 2026. Madrid capturing 55% of national volumes. Prime rents hit €80/sqm/yr for the first time.",primeYield:"5.25%",primeRent:"€80/sqm/yr",outlook:"stable-positive"},competitorIntel:[{firm:"CBRE",summary:"Spain benefiting from nearshoring positioning. Barcelona vacancy 2.8%.",source:"Spain I&L Report Q1 2026"},{firm:"JLL",summary:"Take-up 380,000 sqm Q1 2026. E-commerce and automotive driving demand.",source:"Spain Logistics Market Report Q1 2026"}]}]},{country:"Italy",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Italian logistics investment reached €480m in Q1 2026. Prime yields held at 5.00%.",primeYield:"5.00%",primeRent:"€72/sqm/yr",outlook:"stable"},competitorIntel:[{firm:"Colliers",summary:"Italy increasingly attractive as European logistics investment destination.",source:"Italy Logistics Market Insights 2026"}]}]},{country:"Poland",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Poland's logistics take-up reached 1.4m sqm in Q1 2026. Prime rents in Warsaw stabilised at €62/sqm/yr. Net initial yields at 6.25% offer compelling spread.",primeYield:"6.25%",primeRent:"€62/sqm/yr",outlook:"stable-positive"},competitorIntel:[{firm:"Colliers",summary:"Poland attractive for nearshoring. Warsaw Central commanding 15% premium.",source:"Poland Industrial Market Report Q1 2026"},{firm:"JLL",summary:"Vacancy at historic low 5.2%. Wrocław and Łódź emerging as significant markets.",source:"Poland Logistics Market Pulse Q1 2026"}]}]},{country:"Portugal",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Portuguese logistics is seeing increased European capital as a nearshoring beneficiary. Lisbon prime rents reached €62/sqm/yr.",primeYield:"5.50%",primeRent:"€66/sqm/yr",outlook:"cautious-recovery"},competitorIntel:[{firm:"CBRE",summary:"Growing attractiveness as Iberian and African supply chain hub.",source:"Portugal Logistics Market Update 2026"}]}]},{country:"Denmark",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Danish logistics prime yields held at 5.25% in Q1 2026. Prime rents of DKK 950/sqm/yr reflect tight supply conditions.",primeYield:"5.00%",primeRent:"DKK 732/sqm/yr",outlook:"stable-positive"},competitorIntel:[{firm:"Knight Frank",summary:"Denmark as Nordic gateway with improving fundamentals. Vacancy 3.5%, five-year low.",source:"Nordic Logistics Investment Outlook 2026"}]}]},{country:"Sweden",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Swedish logistics investment recovered to SEK 4.2bn in Q1 2026. Prime rents at SEK 1,450/sqm/yr.",primeYield:"4.90%",primeRent:"SEK 1,250/sqm/yr",outlook:"stabilising"},competitorIntel:[{firm:"JLL",summary:"Nordic e-commerce growth and cold storage demand driving fundamentals.",source:"Sweden I&L Market Update 2026"}]}]},{country:"Norway",sectors:[{sector:"Industrial & Logistics",savillsView:{summary:"Oslo logistics prime rents at NOK 2,100/sqm/yr. Net initial yields compressed to 5.25% in Q1 2026.",primeYield:"5.25%",primeRent:"NOK 2,100/sqm/yr",outlook:"stable"},competitorIntel:[{firm:"CBRE",summary:"Resilience supported by oil wealth and strong domestic consumption. Norway leads Europe on green building mandates.",source:"Norway I&L Market Review 2026"}]}]}]}];
+
+// Helper functions
+function firmBadgeStyle(firm){
+  const c=FIRM_COLORS[firm]||"#64748b";
+  return{background:`${c}22`,color:c,border:`1px solid ${c}44`,padding:"2px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600,display:"inline-flex",alignItems:"center",gap:"4px",whiteSpace:"nowrap"};
+}
+function outlookLabel(outlook){
+  const map={"stable-positive":{label:"Stable-Positive",color:"#10B981"},"stable":{label:"Stable",color:"#3B82F6"},"stabilising":{label:"Stabilising",color:"#8B5CF6"},"cautious-recovery":{label:"Cautious Recovery",color:"#F59E0B"},"negative":{label:"Negative",color:"#EF4444"}};
+  return map[outlook]||{label:outlook,color:"#94a3b8"};
+}
+function countryFlag(country){
+  const map={"UK":"🇬🇧","Netherlands":"🇳🇱","France":"🇫🇷","Germany":"🇩🇪","Italy":"🇮🇹","Spain":"🇪🇸","Portugal":"🇵🇹","Poland":"🇵🇱","Denmark":"🇩🇰","Sweden":"🇸🇪","Norway":"🇳🇴"};
+  return map[country]||"🌍";
+}
+
+// Build yield data for a country
+function getYieldsData(country){
+  const yMap={"UK":ukYields,"Germany":deYields,"France":frYields,"Netherlands":nlYields,"Spain":esYields,"Italy":itYields,"Portugal":ptYields,"Poland":plYields,"Denmark":dkYields,"Sweden":seYields,"Norway":noYields};
+  const rMap={"UK":ukRents,"Germany":deRents,"France":frRents,"Netherlands":nlRents,"Spain":esRents,"Italy":itRents,"Portugal":ptRents,"Poland":plRents,"Denmark":dkRents,"Sweden":seRents,"Norway":noRents};
+  return{yields:yMap[country]||{},rents:rMap[country]||{}};
+}
+</script>
+
+<script type="text/babel">
+const {useState,useEffect,useCallback,useMemo,useRef}=React;
+const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,Legend,ResponsiveContainer,BarChart,Bar,Cell}=Recharts;
+
+// ─── ICONS ───────────────────────────────────────────────────────────────────
+const Icon=({d,size=16,color="currentColor",strokeWidth=2})=>(
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {Array.isArray(d)?d.map((p,i)=><path key={i} d={p}/>):<path d={d}/>}
+  </svg>
+);
+const Icons={
+  FileText:<Icon d={["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z","M14 2v6h6","M16 13H8","M16 17H8","M10 9H8"]}/>,
+  Building2:<Icon d={["M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z","M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2","M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2","M10 6h4","M10 10h4","M10 14h4","M10 18h4"]}/>,
+  TrendingDown:<Icon d={["m22 17-8.5-8.5-5 5L2 7","M16 17h6v-6"]}/>,
+  TrendingUp:<Icon d={["m22 7-8.5 8.5-5-5L2 17","M16 7h6v6"]}/>,
+  Globe:<Icon d={["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M2 12h20","M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"]}/>,
+  Search:<Icon d={["M21 21l-4.35-4.35","M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"]}/>,
+  ExternalLink:<Icon d={["M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6","M15 3h6v6","M10 14 21 3"]}/>,
+  Filter:<Icon d="M22 3H2l8 9.46V19l4 2V12.46z"/>,
+  X:<Icon d={["M18 6 6 18","M6 6l12 12"]}/>,
+  ChevronDown:<Icon d="m6 9 6 6 6-6"/>,
+  ChevronRight:<Icon d="m9 18 6-6-6-6"/>,
+  Bot:<Icon d={["M12 8V4H8","M4 8h16v12H4z","M9 12h.01","M15 12h.01","M9 17h6"]}/>,
+  CheckCircle:<Icon d={["M22 11.08V12a10 10 0 1 1-5.93-9.14","M22 4 12 14.01l-3-3"]}/>,
+  XCircle:<Icon d={["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M15 9l-6 6","M9 9l6 6"]}/>,
+  Clock:<Icon d={["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M12 6v6l4 2"]}/>,
+  AlertTriangle:<Icon d={["M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z","M12 9v4","M12 17h.01"]}/>,
+  PlusCircle:<Icon d={["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M12 8v8","M8 12h8"]}/>,
+  AlertCircle:<Icon d={["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M12 8v4","M12 16h.01"]}/>,
+  BarChart3:<Icon d={["M3 3v18h18","M18 17V9","M13 17V5","M8 17v-3"]}/>,
+  LayoutDashboard:<Icon d={["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","M9 22V12h6v10"]}/>,
+};
+
+// ─── HASH ROUTER ─────────────────────────────────────────────────────────────
+function useHash(){
+  const [hash,setHash]=useState(()=>window.location.hash.slice(1)||"overview");
+  useEffect(()=>{
+    const handler=()=>setHash(window.location.hash.slice(1)||"overview");
+    window.addEventListener("hashchange",handler);
+    return()=>window.removeEventListener("hashchange",handler);
+  },[]);
+  const navigate=(h)=>{window.location.hash=h;};
+  return[hash,navigate];
+}
+
+// ─── FIRM BADGE ──────────────────────────────────────────────────────────────
+function FirmBadge({firm,star}){
+  return <span style={firmBadgeStyle(firm)}>{star?"★ ":""}{FIRM_SHORT[firm]||firm}</span>;
+}
+
+// ─── ACCORDION ───────────────────────────────────────────────────────────────
+function Accordion({title,children,defaultOpen}){
+  const [open,setOpen]=useState(!!defaultOpen);
+  return(
+    <div className="accordion-item">
+      <div className="accordion-header" onClick={()=>setOpen(o=>!o)}>
+        <span style={{fontSize:13,fontWeight:500,color:"var(--text)"}}>{title}</span>
+        <span style={{color:"var(--muted)",transform:open?"rotate(180deg)":"none",transition:"transform 0.2s"}}>{Icons.ChevronDown}</span>
+      </div>
+      {open&&<div className="accordion-body">{children}</div>}
+    </div>
+  );
+}
+
+// ─── OVERVIEW PAGE ───────────────────────────────────────────────────────────
+function OverviewPage(){
+  const [activeCountry,setActiveCountry]=useState("UK");
+  const summary=WEEKLY_SUMMARIES[0];
+  const countryData=summary.countries.find(c=>c.country===activeCountry);
+  const sector=countryData?.sectors[0];
+
+  // KPIs
+  const totalPubs=PUBLICATIONS.length;
+  const savPubs=PUBLICATIONS.filter(p=>p.firm==="Savills").length;
+  const yieldPts=TIME_SERIES.filter(t=>t.metric==="yield").length;
+  const markets=COUNTRIES.length;
+
+  // Pub counts per firm
+  const firmCounts={};
+  FIRMS.forEach(f=>{firmCounts[f]=PUBLICATIONS.filter(p=>p.firm===f).length;});
+  const maxCount=Math.max(...Object.values(firmCounts));
+
+  // Coverage matrix
+  const matrix={};
+  FIRMS.forEach(f=>{matrix[f]={};COUNTRIES.forEach(c=>{matrix[f][c]=0;});});
+  PUBLICATIONS.forEach(p=>{if(matrix[p.firm]&&matrix[p.firm][p.country]!==undefined)matrix[p.firm][p.country]++;});
+
+  // Latest 8 publications
+  const latestPubs=[...PUBLICATIONS].sort((a,b)=>b.publish_date.localeCompare(a.publish_date)).slice(0,8);
+
+  // Coverage alerts
+  const alerts=[];
+  COUNTRIES.forEach(c=>{
+    const hasSavills=matrix["Savills"][c]>0;
+    if(!hasSavills)alerts.push({type:"amber",msg:`Savills has no coverage for ${countryFlag(c)} ${c}`});
+  });
+  FIRMS.forEach(f=>{
+    const zeros=COUNTRIES.filter(c=>matrix[f][c]===0);
+    if(zeros.length>3)alerts.push({type:"red",msg:`${FIRM_SHORT[f]} missing coverage: ${zeros.slice(0,3).join(", ")}${zeros.length>3?` +${zeros.length-3} more`:""}`});
+  });
+
+  const ol=sector&&outlookLabel(sector.savillsView.outlook);
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Overview</h1>
+        <p>European logistics market intelligence — week of {summary.weekOf}</p>
+      </div>
+
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <span className="kpi-label">Total Publications</span>
+          <span className="kpi-value">{totalPubs}</span>
+          <span className="kpi-sub">Across {FIRMS.length} firms</span>
+        </div>
+        <div className="kpi-card amber">
+          <span className="kpi-label">Savills Reports</span>
+          <span className="kpi-value">{savPubs}</span>
+          <span className="kpi-sub">{((savPubs/totalPubs)*100).toFixed(0)}% of total</span>
+        </div>
+        <div className="kpi-card">
+          <span className="kpi-label">Yield Datapoints</span>
+          <span className="kpi-value">{yieldPts}</span>
+          <span className="kpi-sub">10 quarters × {FIRMS.length} firms × {COUNTRIES.length} markets</span>
+        </div>
+        <div className="kpi-card">
+          <span className="kpi-label">Markets Covered</span>
+          <span className="kpi-value">{markets}</span>
+          <span className="kpi-sub">European countries</span>
+        </div>
+      </div>
+
+      {/* Weekly Market Roundup */}
+      <div className="card">
+        <div className="card-title">{Icons.Globe} Weekly Market Roundup</div>
+        <div className="country-tabs">
+          {COUNTRIES.map(c=>(
+            <button key={c} className={`country-tab${activeCountry===c?" active":""}`} onClick={()=>setActiveCountry(c)}>
+              {countryFlag(c)} {c}
+            </button>
+          ))}
+        </div>
+        {sector&&<>
+          <div className="savills-card">
+            <div className="savills-card-header">
+              <span className="savills-label">★ Savills View</span>
+              <span style={{...outlookLabel(sector.savillsView.outlook),padding:"2px 8px",borderRadius:4,fontSize:11,fontWeight:600,background:`${ol.color}22`,color:ol.color}}>{ol.label}</span>
+            </div>
+            <p className="savills-summary">{sector.savillsView.summary}</p>
+            <div className="chip-row">
+              <span className="chip yield">Yield: {sector.savillsView.primeYield}</span>
+              <span className="chip rent">Rent: {sector.savillsView.primeRent}</span>
+            </div>
+          </div>
+          <div className="section-label" style={{marginTop:14}}>Competitor Intel</div>
+          {sector.competitorIntel.map((ci,i)=>(
+            <Accordion key={i} title={<span style={{display:"flex",alignItems:"center",gap:8}}><FirmBadge firm={ci.firm}/> {ci.source}</span>}>
+              {ci.summary}
+            </Accordion>
+          ))}
+        </>}
+      </div>
+
+      {/* Two column: matrix + bar chart */}
+      <div className="two-col">
+        <div className="card" style={{marginBottom:0}}>
+          <div className="card-title">{Icons.BarChart3} Publications by Firm</div>
+          {FIRMS.map(f=>(
+            <div key={f} className="bar-wrap">
+              <div className="bar-label">
+                <span style={{display:"flex",alignItems:"center",gap:6}}><FirmBadge firm={f}/></span>
+                <span style={{fontWeight:600,color:"var(--text)"}}>{firmCounts[f]}</span>
+              </div>
+              <div className="bar-bg">
+                <div className="bar-fill" style={{width:`${(firmCounts[f]/maxCount)*100}%`,background:FIRM_COLORS[f]}}/>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card" style={{marginBottom:0}}>
+          <div className="card-title">{Icons.Globe} Coverage Alerts</div>
+          {alerts.length===0&&<p style={{color:"var(--muted)",fontSize:13}}>No alerts — all firms have coverage.</p>}
+          {alerts.slice(0,6).map((a,i)=>(
+            <div key={i} className={`alert alert-${a.type}`} style={{marginBottom:8}}>
+              {a.msg}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Coverage matrix */}
+      <div className="card" style={{marginTop:20}}>
+        <div className="card-title">{Icons.Globe} Market × Firm Coverage Matrix</div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style={{width:120}}>Market</th>
+                {FIRMS.map(f=><th key={f} style={{textAlign:"center"}}>{FIRM_SHORT[f]}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {COUNTRIES.map(c=>(
+                <tr key={c}>
+                  <td style={{fontWeight:500}}>{countryFlag(c)} {c}</td>
+                  {FIRMS.map(f=>{
+                    const n=matrix[f][c];
+                    const isSav=f==="Savills";
+                    let bg="#EF444420",col="#fca5a5";
+                    if(n>=3){bg="#10B98120";col="#6ee7b7";}
+                    else if(n>=1){bg="#F59E0B20";col="#fcd34d";}
+                    return(
+                      <td key={f} style={{textAlign:"center",padding:"6px"}}>
+                        <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:40,height:26,borderRadius:4,background:isSav&&n>0?"#F59E0B22":bg,color:isSav&&n>0?"#F59E0B":col,fontSize:11,fontWeight:700,border:isSav&&n>0?"1px solid #F59E0B44":"none"}}>
+                          {n===0?"–":n}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Latest publications */}
+      <div className="card" style={{marginTop:20}}>
+        <div className="card-title">{Icons.FileText} Latest Publications</div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Firm</th><th>Title</th><th>Market</th></tr></thead>
+            <tbody>
+              {latestPubs.map(p=>(
+                <tr key={p.id} className={p.firm==="Savills"?"savills-row":""}>
+                  <td style={{whiteSpace:"nowrap",color:"var(--muted)"}}>{p.publish_date}</td>
+                  <td><FirmBadge firm={p.firm} star={p.firm==="Savills"}/></td>
+                  <td>
+                    <a href={p.url} target="_blank" rel="noopener" style={{color:"var(--text)",display:"flex",alignItems:"center",gap:6}}>
+                      {p.title}
+                      <span style={{color:"var(--muted)",flexShrink:0}}>{Icons.ExternalLink}</span>
+                    </a>
+                  </td>
+                  <td>{countryFlag(p.country)} {p.country}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PUBLICATIONS PAGE ────────────────────────────────────────────────────────
+function PublicationsPage({extraPubs}){
+  const [search,setSearch]=useState("");
+  const [firmF,setFirmF]=useState("");
+  const [countryF,setCountryF]=useState("");
+  const [dateFrom,setDateFrom]=useState("");
+  const [dateTo,setDateTo]=useState("");
+  const [sortKey,setSortKey]=useState("publish_date");
+  const [sortDir,setSortDir]=useState("desc");
+  const allPubs=[...PUBLICATIONS,...extraPubs];
+
+  const filtered=useMemo(()=>{
+    let p=[...allPubs];
+    if(search)p=p.filter(x=>x.title.toLowerCase().includes(search.toLowerCase())||x.summary.toLowerCase().includes(search.toLowerCase()));
+    if(firmF)p=p.filter(x=>x.firm===firmF);
+    if(countryF)p=p.filter(x=>x.country===countryF);
+    if(dateFrom)p=p.filter(x=>x.publish_date>=dateFrom);
+    if(dateTo)p=p.filter(x=>x.publish_date<=dateTo);
+    p.sort((a,b)=>{
+      const av=a[sortKey]||"",bv=b[sortKey]||"";
+      return sortDir==="asc"?av.localeCompare(bv):bv.localeCompare(av);
+    });
+    return p;
+  },[allPubs,search,firmF,countryF,dateFrom,dateTo,sortKey,sortDir]);
+
+  const toggleSort=(k)=>{
+    if(sortKey===k)setSortDir(d=>d==="asc"?"desc":"asc");
+    else{setSortKey(k);setSortDir("desc");}
+  };
+  const SortHdr=({k,label})=>(
+    <th className="sortable-th" onClick={()=>toggleSort(k)}>
+      {label} {sortKey===k?(sortDir==="asc"?"▲":"▼"):""}
+    </th>
+  );
+
+  const clear=()=>{setSearch("");setFirmF("");setCountryF("");setDateFrom("");setDateTo("");};
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Publications</h1>
+        <p>{filtered.length} of {allPubs.length} reports</p>
+      </div>
+      <div className="filter-row">
+        <div style={{position:"relative",flex:"1 1 200px"}}>
+          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--muted)",pointerEvents:"none"}}>{Icons.Search}</span>
+          <input className="filter-input" style={{paddingLeft:32,width:"100%"}} placeholder="Search titles & summaries…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        <select className="filter-select" value={firmF} onChange={e=>setFirmF(e.target.value)}>
+          <option value="">All Firms</option>
+          {FIRMS.map(f=><option key={f} value={f}>{f}</option>)}
+        </select>
+        <select className="filter-select" value={countryF} onChange={e=>setCountryF(e.target.value)}>
+          <option value="">All Countries</option>
+          {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+        </select>
+        <input type="date" className="filter-input" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} title="From"/>
+        <input type="date" className="filter-input" value={dateTo} onChange={e=>setDateTo(e.target.value)} title="To"/>
+        <button className="btn btn-ghost" onClick={clear}>{Icons.X} Clear</button>
+      </div>
+
+      {/* Desktop table */}
+      <div className="card" style={{display:"block"}}>
+        <div className="table-wrap" style={{display:"block"}}>
+          <table>
+            <thead>
+              <tr>
+                <SortHdr k="publish_date" label="Date"/>
+                <SortHdr k="firm" label="Firm"/>
+                <SortHdr k="title" label="Title"/>
+                <SortHdr k="country" label="Market"/>
+                <th>Summary</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(p=>(
+                <tr key={p.id} className={p.firm==="Savills"?"savills-row":""}>
+                  <td style={{whiteSpace:"nowrap",color:"var(--muted)",fontSize:12}}>{p.publish_date}</td>
+                  <td><FirmBadge firm={p.firm} star={p.firm==="Savills"}/></td>
+                  <td style={{maxWidth:200,fontWeight:500}}>{p.title}</td>
+                  <td style={{whiteSpace:"nowrap"}}>{countryFlag(p.country)} {p.country}</td>
+                  <td style={{maxWidth:300,color:"var(--muted)",fontSize:12,lineHeight:1.5}}>{p.summary.slice(0,120)}…</td>
+                  <td>
+                    <a href={p.url} target="_blank" rel="noopener" style={{color:"var(--amber)"}}>
+                      {Icons.ExternalLink}
+                    </a>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length===0&&<tr><td colSpan={6} style={{textAlign:"center",color:"var(--muted)",padding:"32px"}}>No publications match the current filters.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── YIELDS PAGE ─────────────────────────────────────────────────────────────
+function YieldsPage(){
+  const [country,setCountry]=useState("UK");
+  const [metric,setMetric]=useState("yield");
+  const [hiddenFirms,setHiddenFirms]=useState(new Set());
+
+  const {yields,rents}=getYieldsData(country);
+  const dataMap=metric==="yield"?yields:rents;
+
+  const chartData=QUARTERS.map((q,i)=>{
+    const pt={quarter:q};
+    FIRMS.forEach(f=>{pt[f]=dataMap[f]?.[i]??null;});
+    return pt;
+  });
+
+  const toggleFirm=(f)=>setHiddenFirms(prev=>{const s=new Set(prev);s.has(f)?s.delete(f):s.add(f);return s;});
+
+  // Latest unit
+  const yieldUnits={"UK":"%","Germany":"%","France":"%","Netherlands":"%","Spain":"%","Italy":"%","Portugal":"%","Poland":"%","Denmark":"%","Sweden":"%","Norway":"%"};
+  const rentUnits={"UK":"£/sqft/yr","Germany":"€/sqm/yr","France":"€/sqm/yr","Netherlands":"€/sqm/yr","Spain":"€/sqm/yr","Italy":"€/sqm/yr","Portugal":"€/sqm/yr","Poland":"€/sqm/yr","Denmark":"DKK/sqm/yr","Sweden":"SEK/sqm/yr","Norway":"NOK/sqm/yr"};
+  const unit=metric==="yield"?yieldUnits[country]:rentUnits[country];
+
+  // Weekly summary data
+  const summary=WEEKLY_SUMMARIES[0];
+  const countryData=summary.countries.find(c=>c.country===country);
+  const sector=countryData?.sectors[0];
+
+  // All-markets snapshot
+  const snapshot=COUNTRIES.map(c=>{
+    const d=getYieldsData(c);
+    const sv=d.yields["Savills"];
+    const sr=d.rents["Savills"];
+    return{country:c,yield:sv?sv[sv.length-1]:null,rent:sr?sr[sr.length-1]:null};
+  });
+
+  const ol=sector&&outlookLabel(sector.savillsView.outlook);
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Yields & Rents</h1>
+        <p>Prime logistics market data — Q1 2024 to Q2 2026</p>
+      </div>
+
+      <div className="country-tabs">
+        {COUNTRIES.map(c=>(
+          <button key={c} className={`country-tab${country===c?" active":""}`} onClick={()=>setCountry(c)}>
+            {countryFlag(c)} {c}
+          </button>
+        ))}
+      </div>
+
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+          <div className="card-title" style={{marginBottom:0}}>{Icons.TrendingDown} {country} — Prime Logistics {metric==="yield"?"Yields":"Rents"}</div>
+          <div style={{display:"flex",gap:8}}>
+            <button className={`btn ${metric==="yield"?"btn-amber":"btn-ghost"}`} onClick={()=>setMetric("yield")}>Yield %</button>
+            <button className={`btn ${metric==="rent"?"btn-amber":"btn-ghost"}`} onClick={()=>setMetric("rent")}>Rent</button>
+          </div>
+        </div>
+        <div className="chart-legend">
+          {FIRMS.map(f=>(
+            <span key={f} className="legend-item" onClick={()=>toggleFirm(f)} style={{opacity:hiddenFirms.has(f)?0.35:1}}>
+              <span className="legend-dot" style={{background:FIRM_COLORS[f],height:f==="Savills"?4:2}}/>
+              {FIRM_SHORT[f]}
+            </span>
+          ))}
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{top:5,right:20,left:0,bottom:5}}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+            <XAxis dataKey="quarter" tick={{fill:"#64748b",fontSize:11}} tickLine={false}/>
+            <YAxis tick={{fill:"#64748b",fontSize:11}} tickLine={false} axisLine={false} tickFormatter={v=>`${v}${metric==="yield"?"%":""}`}/>
+            <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #1e293b",borderRadius:8,fontSize:12}} labelStyle={{color:"#f1f5f9",fontWeight:600}} formatter={(v,n)=>[`${v}${metric==="yield"?"%":""} ${unit}`,n]}/>
+            {FIRMS.filter(f=>!hiddenFirms.has(f)).map(f=>(
+              <Line key={f} type="monotone" dataKey={f} stroke={FIRM_COLORS[f]} strokeWidth={f==="Savills"?3:1.5} dot={false} connectNulls/>
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {sector&&<>
+        <div className="savills-card">
+          <div className="savills-card-header">
+            <span className="savills-label">★ Savills View — {country}</span>
+            {ol&&<span style={{padding:"2px 8px",borderRadius:4,fontSize:11,fontWeight:600,background:`${ol.color}22`,color:ol.color}}>{ol.label}</span>}
+          </div>
+          <p className="savills-summary">{sector.savillsView.summary}</p>
+          <div className="chip-row">
+            <span className="chip yield">Prime Yield: {sector.savillsView.primeYield}</span>
+            <span className="chip rent">Prime Rent: {sector.savillsView.primeRent}</span>
+          </div>
+        </div>
+        {sector.competitorIntel.map((ci,i)=>(
+          <Accordion key={i} title={<span style={{display:"flex",alignItems:"center",gap:8}}><FirmBadge firm={ci.firm}/> Competitor Intel</span>}>
+            {ci.summary} — <em style={{color:"var(--muted)"}}>{ci.source}</em>
+          </Accordion>
+        ))}
+      </>}
+
+      <div className="card" style={{marginTop:20}}>
+        <div className="card-title">{Icons.Globe} All-Markets Snapshot (Q2 2026 — Savills)</div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Market</th><th>Prime Yield (%)</th><th>Prime Rent</th></tr></thead>
+            <tbody>
+              {snapshot.map(s=>(
+                <tr key={s.country} className={s.country===country?"savills-row":""} onClick={()=>setCountry(s.country)} style={{cursor:"pointer"}}>
+                  <td style={{fontWeight:500}}>{countryFlag(s.country)} {s.country}</td>
+                  <td style={{fontFamily:"monospace"}}>{s.yield?.toFixed(2)}%</td>
+                  <td style={{fontFamily:"monospace"}}>{s.rent}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── COVERAGE GAPS PAGE ───────────────────────────────────────────────────────
+function GapsPage(){
+  // Build matrix
+  const matrix={};
+  FIRMS.forEach(f=>{matrix[f]={};COUNTRIES.forEach(c=>{matrix[f][c]=0;});});
+  PUBLICATIONS.forEach(p=>{if(matrix[p.firm]&&matrix[p.firm][p.country]!==undefined)matrix[p.firm][p.country]++;});
+
+  const totalCells=FIRMS.length*COUNTRIES.length;
+  const coveredCells=FIRMS.reduce((a,f)=>a+COUNTRIES.filter(c=>matrix[f][c]>0).length,0);
+  const zeroCells=totalCells-coveredCells;
+  const fullCoverCells=FIRMS.reduce((a,f)=>a+COUNTRIES.filter(c=>matrix[f][c]>=2).length,0);
+  const savGaps=COUNTRIES.filter(c=>matrix["Savills"][c]===0).length;
+
+  // Savills opportunity markets (≥2 competitors but Savills=0)
+  const oppMarkets=COUNTRIES.filter(c=>{
+    const compCoverage=FIRMS.filter(f=>f!=="Savills"&&matrix[f][c]>0).length;
+    return compCoverage>=2&&matrix["Savills"][c]===0;
+  });
+  const zeroCoverMarkets=COUNTRIES.filter(c=>FIRMS.every(f=>matrix[f][c]===0));
+  const wellCovered=COUNTRIES.filter(c=>FIRMS.filter(f=>matrix[f][c]>0).length===FIRMS.length);
+
+  function heatClass(n){
+    if(n===0)return"heat-0";
+    if(n===1)return"heat-1";
+    if(n>=3)return"heat-3";
+    return"heat-2";
+  }
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Coverage Gaps</h1>
+        <p>Identify research gaps across firms and markets</p>
+      </div>
+
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <span className="kpi-label">Coverage Rate</span>
+          <span className="kpi-value">{((coveredCells/totalCells)*100).toFixed(0)}%</span>
+          <span className="kpi-sub">{coveredCells}/{totalCells} firm×market cells</span>
+        </div>
+        <div className="kpi-card amber">
+          <span className="kpi-label">Savills Gaps</span>
+          <span className="kpi-value">{savGaps}</span>
+          <span className="kpi-sub">Markets with no Savills report</span>
+        </div>
+        <div className="kpi-card" style={{borderColor:"rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.06)"}}>
+          <span className="kpi-label">Zero-Coverage Cells</span>
+          <span className="kpi-value" style={{color:"var(--red)"}}>{zeroCells}</span>
+          <span className="kpi-sub">No firm has covered these</span>
+        </div>
+        <div className="kpi-card" style={{borderColor:"rgba(16,185,129,0.3)",background:"rgba(16,185,129,0.06)"}}>
+          <span className="kpi-label">Full Coverage</span>
+          <span className="kpi-value" style={{color:"var(--green)"}}>{wellCovered.length}</span>
+          <span className="kpi-sub">Markets with all 6 firms</span>
+        </div>
+      </div>
+
+      {/* Heatmap */}
+      <div className="card">
+        <div className="card-title">{Icons.BarChart3} Coverage Heatmap</div>
+        <div style={{display:"flex",gap:16,marginBottom:12,flexWrap:"wrap"}}>
+          {[["heat-0","0 — No coverage"],["heat-1","1 — Thin"],["heat-2","2 — Covered"],["heat-3","3+ — Well covered"]].map(([cls,lbl])=>(
+            <span key={cls} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--muted)"}}>
+              <span className={`matrix-cell ${cls}`} style={{width:24,height:16,borderRadius:3,display:"inline-block"}}/>
+              {lbl}
+            </span>
+          ))}
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Market</th>
+                {FIRMS.map(f=><th key={f} style={{textAlign:"center"}}>{FIRM_SHORT[f]}</th>)}
+                <th style={{textAlign:"center"}}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COUNTRIES.map(c=>{
+                const total=FIRMS.reduce((a,f)=>a+(matrix[f][c]>0?1:0),0);
+                return(
+                  <tr key={c}>
+                    <td style={{fontWeight:500,whiteSpace:"nowrap"}}>{countryFlag(c)} {c}</td>
+                    {FIRMS.map(f=>{
+                      const n=matrix[f][c];
+                      const isSav=f==="Savills";
+                      return(
+                        <td key={f} style={{textAlign:"center",padding:"6px"}}>
+                          <span className={`matrix-cell ${heatClass(n)}`} style={{width:38,height:24,borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,border:isSav&&n>0?"2px solid #F59E0B44":"none"}}>
+                            {n===0?"–":n}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td style={{textAlign:"center",fontWeight:700,color:total===FIRMS.length?"var(--green)":total===0?"var(--red)":"var(--amber)"}}>{total}/{FIRMS.length}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="two-col">
+        <div className="card" style={{marginBottom:0}}>
+          <div className="card-title" style={{color:"var(--amber)"}}>★ Savills Opportunity Markets</div>
+          {oppMarkets.length===0?<p style={{color:"var(--muted)",fontSize:13}}>No opportunity gaps found.</p>:oppMarkets.map(c=>(
+            <div key={c} className="alert alert-amber">
+              <strong>{countryFlag(c)} {c}</strong> — Competitors active, Savills has no coverage
+            </div>
+          ))}
+          {savGaps>0&&COUNTRIES.filter(c=>matrix["Savills"][c]===0&&!oppMarkets.includes(c)).map(c=>(
+            <div key={c} className="alert alert-amber">
+              <strong>{countryFlag(c)} {c}</strong> — Savills gap (limited competitor coverage)
+            </div>
+          ))}
+        </div>
+        <div>
+          <div className="card" style={{marginBottom:16}}>
+            <div className="card-title" style={{color:"var(--red)"}}>Zero Coverage Alerts</div>
+            {zeroCoverMarkets.length===0?<p style={{color:"var(--muted)",fontSize:13}}>All markets have at least one firm covering them.</p>:zeroCoverMarkets.map(c=>(
+              <div key={c} className="alert alert-red">{countryFlag(c)} {c} — No firm has published research</div>
+            ))}
+          </div>
+          <div className="card" style={{marginBottom:0}}>
+            <div className="card-title" style={{color:"var(--green)"}}>Well-Covered Markets</div>
+            {wellCovered.length===0?<p style={{color:"var(--muted)",fontSize:13}}>No market has full 6-firm coverage yet.</p>:wellCovered.map(c=>(
+              <div key={c} className="alert alert-green">{countryFlag(c)} {c} — All {FIRMS.length} firms covered</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ADD ENTRY PAGE ───────────────────────────────────────────────────────────
+function AddPage({onAdd}){
+  const blank={firm:"Savills",country:"UK",title:"",date:"",summary:"",url:"",primeYield:"",primeRent:"",rentUnit:"€/sqm/yr",sourceType:"public",dataProvider:""};
+  const [form,setForm]=useState(blank);
+  const [status,setStatus]=useState(null);
+  const [added,setAdded]=useState([]);
+
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const handleSubmit=()=>{
+    if(!form.title||!form.date||!form.country){setStatus("error");return;}
+    const entry={id:"user-"+Date.now(),publish_date:form.date,firm:form.firm,title:form.title,country:form.country,sector:"Industrial & Logistics",summary:form.summary,url:form.url,primeYield:form.primeYield,primeRent:form.primeRent,rentUnit:form.rentUnit};
+    setAdded(a=>[entry,...a]);
+    if(onAdd)onAdd(entry);
+    setStatus("success");
+    setForm(blank);
+    setTimeout(()=>setStatus(null),3000);
+  };
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Add Entry</h1>
+        <p>Manually add a publication or market data point</p>
+      </div>
+      <div className="card">
+        <div className="card-title">{Icons.PlusCircle} New Publication / Data Entry</div>
+        {status==="success"&&<div className="alert alert-green" style={{marginBottom:16}}>Entry added successfully!</div>}
+        {status==="error"&&<div className="alert alert-red" style={{marginBottom:16}}>Please fill in required fields: Firm, Country, Title, Date.</div>}
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Firm *</label>
+            <select className="form-input" value={form.firm} onChange={e=>set("firm",e.target.value)}>
+              {FIRMS.map(f=><option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Country *</label>
+            <select className="form-input" value={form.country} onChange={e=>set("country",e.target.value)}>
+              {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Title *</label>
+            <input className="form-input" value={form.title} onChange={e=>set("title",e.target.value)} placeholder="Report or publication title"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Date *</label>
+            <input type="date" className="form-input" value={form.date} onChange={e=>set("date",e.target.value)}/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">URL</label>
+            <input className="form-input" value={form.url} onChange={e=>set("url",e.target.value)} placeholder="https://…"/>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Summary</label>
+            <textarea className="form-input" value={form.summary} onChange={e=>set("summary",e.target.value)} placeholder="Key findings and market commentary…"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Prime Yield (%)</label>
+            <input className="form-input" value={form.primeYield} onChange={e=>set("primeYield",e.target.value)} placeholder="e.g. 4.75"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Prime Rent</label>
+            <input className="form-input" value={form.primeRent} onChange={e=>set("primeRent",e.target.value)} placeholder="e.g. 95"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Rent Unit</label>
+            <select className="form-input" value={form.rentUnit} onChange={e=>set("rentUnit",e.target.value)}>
+              <option>€/sqm/yr</option>
+              <option>£/sqft/yr</option>
+              <option>DKK/sqm/yr</option>
+              <option>SEK/sqm/yr</option>
+              <option>NOK/sqm/yr</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Source Type</label>
+            <select className="form-input" value={form.sourceType} onChange={e=>set("sourceType",e.target.value)}>
+              <option value="public">Public</option>
+              <option value="proprietary">Proprietary</option>
+              <option value="scraped">Agent-collected</option>
+            </select>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Data Provider (optional)</label>
+            <input className="form-input" value={form.dataProvider} onChange={e=>set("dataProvider",e.target.value)} placeholder="e.g. MSCI, CoStar, PMA…"/>
+          </div>
+        </div>
+        <div style={{marginTop:20,display:"flex",justifyContent:"flex-end"}}>
+          <button className="btn btn-amber" style={{padding:"10px 28px",fontSize:14}} onClick={handleSubmit}>
+            {Icons.PlusCircle} &nbsp;Add Entry
+          </button>
+        </div>
+      </div>
+
+      {added.length>0&&(
+        <div className="card">
+          <div className="card-title">Session-Added Entries ({added.length})</div>
+          {added.map(e=>(
+            <div key={e.id} className="pub-card savills-card-pub" style={{borderColor:FIRM_COLORS[e.firm]||"var(--border)"}}>
+              <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:6}}>
+                <FirmBadge firm={e.firm}/>
+                <span style={{color:"var(--muted)",fontSize:12}}>{e.publish_date}</span>
+                <span style={{color:"var(--muted)",fontSize:12}}>{countryFlag(e.country)} {e.country}</span>
+              </div>
+              <div style={{fontWeight:600,marginBottom:4}}>{e.title}</div>
+              {e.summary&&<div style={{color:"var(--muted)",fontSize:12}}>{e.summary}</div>}
+              {(e.primeYield||e.primeRent)&&(
+                <div className="chip-row" style={{marginTop:8}}>
+                  {e.primeYield&&<span className="chip yield">Yield: {e.primeYield}%</span>}
+                  {e.primeRent&&<span className="chip rent">Rent: {e.primeRent} {e.rentUnit}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── AGENT LOG PAGE ───────────────────────────────────────────────────────────
+function LogPage(){
+  function StatusBadge({status}){
+    const map={success:{icon:Icons.CheckCircle,color:"#10B981",label:"Success"},error:{icon:Icons.XCircle,color:"#EF4444",label:"Error"},pending:{icon:Icons.Clock,color:"#F59E0B",label:"Pending"}};
+    const s=map[status]||map.pending;
+    return<span style={{display:"inline-flex",alignItems:"center",gap:5,padding:"2px 10px",borderRadius:4,background:`${s.color}22`,color:s.color,fontSize:11,fontWeight:700}}>{s.icon} {s.label}</span>;
+  }
+
+  return(
+    <div>
+      <div className="page-header">
+        <h1>Agent Log</h1>
+        <p>Automated intelligence collection runs</p>
+      </div>
+      {AGENT_RUNS.map(run=>(
+        <div key={run.runId} className="run-card">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
+            <div>
+              <div style={{fontSize:16,fontWeight:700,marginBottom:4}}>Run {run.date}</div>
+              <div style={{fontSize:12,color:"var(--muted)"}}>ID: {run.runId}</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>Triggered by: <strong style={{color:"var(--text)"}}>{run.triggeredBy}</strong></div>
+            </div>
+            <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:22,fontWeight:700,color:"var(--amber)"}}>{run.totals.publicationsFound}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Publications Found</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:22,fontWeight:700,color:"var(--green)"}}>{run.totals.newPublications}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>New Publications</div>
+              </div>
+            </div>
+          </div>
+          <div className="section-label" style={{marginTop:20}}>Per-Firm Results</div>
+          <div className="firm-grid">
+            {run.agents.map(a=>(
+              <div key={a.firm} className="firm-stat-card" style={{borderLeft:`3px solid ${FIRM_COLORS[a.firm]||"var(--border)"}`}}>
+                <div className="firm-stat-name" style={{color:FIRM_COLORS[a.firm]||"var(--text)"}}>{FIRM_SHORT[a.firm]||a.firm}</div>
+                <div style={{marginBottom:8}}><StatusBadge status={a.status}/></div>
+                <div className="firm-stat-row"><span>Publications found</span><span className="firm-stat-val">{a.publicationsFound}</span></div>
+                <div className="firm-stat-row"><span>New publications</span><span className="firm-stat-val">{a.newPublications}</span></div>
+                <div className="firm-stat-row"><span>Yield datapoints</span><span className="firm-stat-val">{a.newYieldDatapoints}</span></div>
+                <div className="firm-stat-row"><span>Rent datapoints</span><span className="firm-stat-val">{a.newRentDatapoints}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── SIDEBAR NAV ─────────────────────────────────────────────────────────────
+const NAV=[
+  {id:"overview",label:"Overview",icon:"LayoutDashboard"},
+  {id:"publications",label:"Publications",icon:"FileText"},
+  {id:"yields",label:"Yields & Rents",icon:"TrendingDown"},
+  {id:"gaps",label:"Coverage Gaps",icon:"AlertCircle"},
+  {id:"add",label:"Add Entry",icon:"PlusCircle"},
+  {id:"log",label:"Agent Log",icon:"Bot"},
+];
+
+function NavItem({item,active,navigate}){
+  return(
+    <div className={`nav-item${active?" active":""}`} onClick={()=>navigate(item.id)}>
+      {Icons[item.icon]||Icons.FileText}
+      {item.label}
+    </div>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+function App(){
+  const [page,navigate]=useHash();
+  const [extraPubs,setExtraPubs]=useState([]);
+
+  const handleAdd=(entry)=>setExtraPubs(p=>[entry,...p]);
+
+  const renderPage=()=>{
+    switch(page){
+      case"publications":return<PublicationsPage extraPubs={extraPubs}/>;
+      case"yields":return<YieldsPage/>;
+      case"gaps":return<GapsPage/>;
+      case"add":return<AddPage onAdd={handleAdd}/>;
+      case"log":return<LogPage/>;
+      default:return<OverviewPage/>;
+    }
+  };
+
+  return(
+    <div id="root-inner" style={{display:"flex",height:"100vh",width:"100%",overflow:"hidden"}}>
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-title">EU Logistics Intelligence</div>
+          <div className="logo-sub">Research Dashboard</div>
+        </div>
+        <div className="sidebar-nav">
+          {NAV.map(item=><NavItem key={item.id} item={item} active={page===item.id} navigate={navigate}/>)}
+        </div>
+        <div style={{padding:"16px",borderTop:"1px solid var(--border)",fontSize:11,color:"var(--muted)"}}>
+          Last updated: 2026-06-02<br/>
+          <span style={{color:"var(--amber)",fontWeight:600}}>Savills</span> Research Platform
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="main-content">
+        {renderPage()}
+      </div>
+
+      {/* Bottom nav (mobile) */}
+      <div className="bottom-nav">
+        <div className="bottom-nav-items">
+          {NAV.map(item=>(
+            <button key={item.id} className={`bottom-nav-item${page===item.id?" active":""}`} onClick={()=>navigate(item.id)}>
+              {Icons[item.icon]||Icons.FileText}
+              <span>{item.label.split(" ")[0]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
