@@ -59,7 +59,7 @@ export default function AgentLog() {
             {/* Per-firm results */}
             <div className="p-4">
               <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-3">Per-Firm Results</div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {run.agents.map(agent => (
                   <div key={agent.firm}
                     className={`flex flex-col gap-2 p-3 rounded-lg border ${agent.firm === "Savills" ? "bg-amber-500/8 border-amber-500/20" : "bg-slate-800/60 border-slate-700/50"}`}

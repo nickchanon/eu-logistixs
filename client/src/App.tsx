@@ -76,44 +76,50 @@ function AppInner() {
 
   return (
     <div className="min-h-screen flex bg-slate-950">
-      {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 bg-slate-900 border-r border-slate-800 transition-all duration-200 ${sidebarOpen ? "w-56" : "w-16"}`}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-800 h-14">
-          {sidebarOpen ? <Logo /> : (
-            <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="6" fill="#F59E0B"/>
-              <path d="M7 14h14M14 7v14" stroke="#0F172A" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          )}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 hover:text-slate-200 p-1 rounded" data-testid="toggle-sidebar">
-            <ChevronLeft size={16} className={`transition-transform ${sidebarOpen ? "" : "rotate-180"}`} />
-          </button>
+      {/* Sidebar: icon-only on tablet (md=768-1023px), full on desktop (lg=1024px+) */}
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 bg-slate-900 border-r border-slate-800 transition-all duration-200 w-16 lg:w-56">
+        <div className="flex items-center justify-between p-3 border-b border-slate-800 h-14">
+          {/* Logo: full on lg, icon-only on md */}
+          <div className="hidden lg:flex items-center"><Logo /></div>
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none" className="flex lg:hidden flex-shrink-0">
+            <rect width="28" height="28" rx="6" fill="#F59E0B"/>
+            <path d="M7 14h14M14 7v14" stroke="#0F172A" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
         </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(item => (
-            <NavItem key={item.href} {...item} />
-          ))}
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const [loc] = useLocation();
+            const active = loc === href;
+            return (
+              <Link key={href} href={href}>
+                <a className={`flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  active ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}>
+                  <Icon size={18} className={`flex-shrink-0 mx-auto lg:mx-0 ${active ? 'text-amber-400' : ''}`} />
+                  <span className="hidden lg:block truncate">{label}</span>
+                </a>
+              </Link>
+            );
+          })}
         </nav>
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-2 border-t border-slate-800">
           <button
             onClick={() => setDark(!dark)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 w-full text-sm"
+            className="flex items-center gap-2 px-2 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 w-full text-sm"
             data-testid="toggle-theme"
           >
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-            {sidebarOpen && <span>{dark ? "Light mode" : "Dark mode"}</span>}
+            {dark ? <Sun size={16} className="flex-shrink-0 mx-auto lg:mx-0" /> : <Moon size={16} className="flex-shrink-0 mx-auto lg:mx-0" />}
+            <span className="hidden lg:block">{dark ? 'Light mode' : 'Dark mode'}</span>
           </button>
-          {sidebarOpen && (
-            <div className="mt-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Savills Internal</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">6 firms · 11 markets</div>
-            </div>
-          )}
+          <div className="mt-2 px-2 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 hidden lg:block">
+            <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Savills Internal</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">6 firms · 11 markets</div>
+          </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${sidebarOpen ? "md:ml-56" : "md:ml-16"}`}>
+      {/* Main content: offset by icon-sidebar on md, full sidebar on lg */}
+      <main className="flex-1 flex flex-col min-h-screen transition-all duration-200 md:ml-16 lg:ml-56">
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
           <button onClick={() => setMobileMenuOpen(true)} className="md:hidden text-slate-400 hover:text-slate-200" data-testid="open-mobile-menu">
@@ -152,7 +158,7 @@ function AppInner() {
           </div>
         )}
 
-        <div className="flex-1 p-4 md:p-6">
+        <div className="flex-1 p-4 md:p-5 lg:p-6 pb-20 md:pb-5 lg:pb-6">
           <Switch>
             <Route path="/" component={Overview} />
             <Route path="/publications" component={Publications} />

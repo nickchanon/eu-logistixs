@@ -43,7 +43,7 @@ export default function CoverageGaps() {
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Coverage Rate</div>
           <div className="text-2xl font-bold text-slate-100">{coveragePct}%</div>
